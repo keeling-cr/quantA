@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Interactive Line Graph</title>
+    <style>
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="1600" height="600"></canvas>
+    <script>
+      const data = [
+        { date: "2021.1", value: 91071402 },
+        { date: "2021.2", value: 68944271 },
+        { date: "2021.3", value: 55720833 },
+        { date: "2021.4", value: 89378918 },
+        { date: "2021.5", value: 83195371 },
+        { date: "2021.6", value: 87962068 },
+        { date: "2021.7", value: 87758529 },
+        { date: "2021.8", value: 74066312 },
+        { date: "2021.9", value: 72033403 },
+        { date: "2021.10", value: 68847078 },
+        { date: "2021.11", value: 71300943 },
+        { date: "2021.12", value: 72827093 },
+        { date: "2022.1", value: 83698532 },
+        { date: "2022.2", value: 46216979 },
+        { date: "2022.3", value: 53326421 },
+        { date: "2022.4", value: 63055283 },
+        { date: "2022.5", value: 71231811 },
+        { date: "2022.6", value: 86703450 },
+        { date: "2022.7", value: 80414409 },
+        { date: "2022.8", value: 77112982 },
+        { date: "2022.9", value: 78274721 },
+        { date: "2022.10", value: 58062871 },
+        { date: "2022.11", value: 65876695 },
+        { date: "2022.12", value: 66575168 },
+        { date: "2023.1", value: 84597686 },
+        { date: "2023.2", value: 35412465 }
+      ];
+
+      // Sort the data by date
+      data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const margin = 50;
+      const width = canvas.width - margin * 2;
+      const height = canvas.height - margin * 2;
+
+      // Find the minimum and maximum values of the data
+      const minValue = Math.min(...data.map(d => d.value));
+      const maxValue = Math.max(...data.map(d => d.value));
+
+      // Calculate the x and y scales
+      const xScale = width / (data.length - 1);
+      const yScale = height / (maxValue - minValue);
+
+      // Draw the x-axis
+      ctx.beginPath();
+      ctx.moveTo(margin, canvas.height - margin);
+      ctx.lineTo(canvas.width - margin, canvas.height - margin);
+      ctx.stroke();
+
+      // Draw the y-axis
+      ctx.beginPath();
+      ctx.moveTo(margin, canvas.height - margin);
+      ctx.lineTo(margin, margin);
+      ctx.stroke();
+
+      // Draw x-axis gridlines and labels
+      data.forEach((d, i) => {
+        const x = i * xScale + margin;
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(x, canvas.height - margin);
+        ctx.lineTo(x, margin);
+        ctx.stroke();
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(d.date, x, canvas.height - margin / 3);
+      });
+
+      // Draw y-axis gridlines
+      for (let i = minValue; i <= maxValue; i += 10000000) {
+        const y = canvas.height - margin - (i - minValue) * yScale;
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(margin, y);
+        ctx.lineTo(canvas.width - margin, y);
+        ctx.stroke();
+      }
+
+      // Draw the data line
+      ctx.beginPath();
+      ctx.strokeStyle = "blue";
+      data.forEach((d, i) => {
+        const x = i * xScale + margin;
+        const y = canvas.height - margin - (d.value - minValue) * yScale;
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+
+      // Draw the data points
+      data.forEach((d, i) => {
+        const x = i * xScale + margin;
+        const y = canvas.height - margin - (d.value - minValue) * yScale;
+        ctx.fillStyle = "blue";
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Add event listeners for tooltips
+      canvas.addEventListener("mousemove", e => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const tooltipPadding = 10;
+        data.forEach((d, i) => {
+          const x = i * xScale + margin;
+          const y = canvas.height - margin - (d.value - minValue) * yScale;
+          if (
+            mouseX >= x - tooltipPadding &&
+            mouseX <= x + tooltipPadding &&
+            mouseY >= y - tooltipPadding &&
+            mouseY <= y + tooltipPadding
+          ) {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.innerText = `${d.date}: ${d.value}`;
+            tooltip.style.display = "block";
+            tooltip.style.left = `${e.pageX + tooltipPadding}px`;
+            tooltip.style.top = `${e.pageY + tooltipPadding}px`;
+          }
+        });
+      });
+
+      canvas.addEventListener("mouseout", () => {
+        const tooltip = document.getElementById("tooltip");
+        tooltip.style.display = "none";
+      });
+    </script>
+    <div id="tooltip" style="display: none; position: absolute; background-color: #fff; padding: 5px; border: 1px solid #000;"></div>
+  </body>
+</html>

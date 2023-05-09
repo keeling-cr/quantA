@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Interactive Line Graph</title>
+    <style>
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="2000" height="600"></canvas>
+    <script>
+      const data = [
+        { date: "2020.1", value: 102889511 },
+        { date: "2020.2", value: 71214808 },
+        { date: "2020.3", value: 157104877 },
+        { date: "2020.4", value: 88122901 },
+        { date: "2020.5", value: 66466705 },
+        { date: "2020.6", value: 77287406 },
+        { date: "2020.7", value: 97517180 },
+        { date: "2020.8", value: 117102056 },
+        { date: "2020.9", value: 111834564 },
+        { date: "2020.10", value: 110236389 },
+        { date: "2020.11", value: 112276700 },
+        { date: "2020.12", value: 102024390 },
+        { date: "2021.1", value: 106667476 },
+        { date: "2021.2", value: 94416284 },
+        { date: "2021.3", value: 126857363 },
+        { date: "2021.4", value: 107187264 },
+        { date: "2021.5", value: 104842658 },
+        { date: "2021.6", value: 100547404 },
+        { date: "2021.7", value: 87450526 },
+        { date: "2021.8", value: 102595504 },
+        { date: "2021.9", value: 107974352 },
+        { date: "2021.10", value: 115832689 },
+        { date: "2021.11", value: 123567775 },
+        { date: "2021.12", value: 133686740 },
+        { date: "2022.1", value: 141400232 },
+        { date: "2022.2", value: 101419616 },
+        { date: "2022.3", value: 145024437 },
+        { date: "2022.4", value: 118587927 },
+        { date: "2022.5", value: 115652023 },
+        { date: "2022.6", value: 124331927 },
+        { date: "2022.7", value: 125795845 },
+        { date: "2022.8", value: 104102521 },
+        { date: "2022.9", value: 96280148 },
+        { date: "2022.10", value: 99079926 },
+        { date: "2022.11", value: 107175939 },
+        { date: "2022.12", value: 126971521 },
+        { date: "2023.1", value: 131603576 },
+        { date: "2023.2", value: 154222609 },
+        { date: "2023.3", value: 151301766 }
+      ];
+
+      // Sort the data by date
+      data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const margin = 50;
+      const width = canvas.width - margin * 2;
+      const height = canvas.height - margin * 2;
+
+      // Find the minimum and maximum values of the data
+      const minValue = Math.min(...data.map(d => d.value));
+      const maxValue = Math.max(...data.map(d => d.value));
+
+      // Calculate the x and y scales
+      const xScale = width / (data.length - 1);
+      const yScale = height / (maxValue - minValue);
+
+      // Draw the x-axis
+      ctx.beginPath();
+      ctx.moveTo(margin, canvas.height - margin);
+      ctx.lineTo(canvas.width - margin, canvas.height - margin);
+      ctx.stroke();
+
+      // Draw the y-axis
+      ctx.beginPath();
+      ctx.moveTo(margin, canvas.height - margin);
+      ctx.lineTo(margin, margin);
+      ctx.stroke();
+
+      // Draw x-axis gridlines and labels
+      data.forEach((d, i) => {
+        const x = i * xScale + margin;
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(x, canvas.height - margin);
+        ctx.lineTo(x, margin);
+        ctx.stroke();
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(d.date, x, canvas.height - margin / 3);
+      });
+
+      // Draw y-axis gridlines
+      for (let i = minValue; i <= maxValue; i += 10000000) {
+        const y = canvas.height - margin - (i - minValue) * yScale;
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(margin, y);
+        ctx.lineTo(canvas.width - margin, y);
+        ctx.stroke();
+      }
+
+      // Draw the data line
+      ctx.beginPath();
+      ctx.strokeStyle = "blue";
+      data.forEach((d, i) => {
+        const x = i * xScale + margin;
+        const y = canvas.height - margin - (d.value - minValue) * yScale;
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+
+      // Draw the data points
+      data.forEach((d, i) => {
+        const x = i * xScale + margin;
+        const y = canvas.height - margin - (d.value - minValue) * yScale;
+        ctx.fillStyle = "blue";
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Add event listeners for tooltips
+      canvas.addEventListener("mousemove", e => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const tooltipPadding = 10;
+        data.forEach((d, i) => {
+          const x = i * xScale + margin;
+          const y = canvas.height - margin - (d.value - minValue) * yScale;
+          if (
+            mouseX >= x - tooltipPadding &&
+            mouseX <= x + tooltipPadding &&
+            mouseY >= y - tooltipPadding &&
+            mouseY <= y + tooltipPadding
+          ) {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.innerText = `${d.date}: ${d.value}`;
+            tooltip.style.display = "block";
+            tooltip.style.left = `${e.pageX + tooltipPadding}px`;
+            tooltip.style.top = `${e.pageY + tooltipPadding}px`;
+          }
+        });
+      });
+
+      canvas.addEventListener("mouseout", () => {
+        const tooltip = document.getElementById("tooltip");
+        tooltip.style.display = "none";
+      });
+    </script>
+    <div id="tooltip" style="display: none; position: absolute; background-color: #fff; padding: 5px; border: 1px solid #000;"></div>
+  </body>
+</html>
